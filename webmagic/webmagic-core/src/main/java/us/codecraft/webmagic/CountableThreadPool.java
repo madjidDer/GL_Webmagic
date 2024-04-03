@@ -1,4 +1,4 @@
-package us.codecraft.webmagic.thread;
+package us.codecraft.webmagic;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
