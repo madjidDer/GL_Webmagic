@@ -163,13 +163,25 @@ public class Page {
     }
     
     /**
+     * Checks if a URL is considered valid for processing.
+     * A URL is deemed valid if it is not blank, does not merely reference a page fragment, and does not start with 'javascript:'.
+     * This helps in filtering out URLs that are unlikely to lead to actual webpages or that could cause issues in web scraping or crawling processes.
+     *
+     * @param url The URL string to check for validity.
+     * @return true if the URL is considered valid; false otherwise.
+     */
+    private boolean isValidUrl(String url) {
+        return StringUtils.isNotBlank(url) && !url.equals("#") && !url.startsWith("javascript:");
+    }
+    
+    /**
      * Helper method to add a request if it's valid.
      *
      * @param url      URL to add
      * @param priority Priority for the URL
      */
     private void addRequestIfValid(String url, long priority) {
-        if (StringUtils.isBlank(url) || url.equals("#") || url.startsWith("javascript:")) {
+        if (!isValidUrl(url)) {
             return;
         }
 
@@ -187,7 +199,7 @@ public class Page {
      * @param requestString requestString
      */
     public void addTargetRequest(String requestString) {
-        if (StringUtils.isBlank(requestString) || requestString.equals("#")) {
+        if (isValidUrl(requestString)) {
             return;
         }
         requestString = UrlUtils.canonicalizeUrl(requestString, url.toString());
