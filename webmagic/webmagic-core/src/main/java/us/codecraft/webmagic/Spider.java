@@ -385,7 +385,7 @@ public class Spider implements Runnable, Task {
             try {
                 ((Closeable) object).close();
             } catch (IOException e) {
-                e.printStackTrace();
+            	LOGGER.log("context", e);
             }
         }
     }
