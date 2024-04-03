@@ -168,18 +168,6 @@ public class Spider implements Runnable, Task {
     /**
      * set scheduler for Spider
      *
-     * @param scheduler scheduler
-     * @return this
-     * @see #setScheduler(us.codecraft.webmagic.scheduler.Scheduler)
-     */
-    @Deprecated
-    public Spider scheduler(Scheduler scheduler) {
-        return setScheduler(scheduler);
-    }
-
-    /**
-     * set scheduler for Spider
-     *
      * @param updateScheduler scheduler
      * @return this
      * @see Scheduler
@@ -196,19 +184,6 @@ public class Spider implements Runnable, Task {
             }
         }
         return this;
-    }
-
-    /**
-     * add a pipeline for Spider
-     *
-     * @param pipeline pipeline
-     * @return this
-     * @see #addPipeline(us.codecraft.webmagic.pipeline.Pipeline)
-     * @deprecated
-     */
-    @Deprecated
-    public Spider pipeline(Pipeline pipeline) {
-        return addPipeline(pipeline);
     }
 
     /**
@@ -247,19 +222,6 @@ public class Spider implements Runnable, Task {
     public Spider clearPipeline() {
         pipelines = new ArrayList<Pipeline>();
         return this;
-    }
-
-    /**
-     * set the downloader of spider
-     *
-     * @param downloader downloader
-     * @return this
-     * @see #setDownloader(us.codecraft.webmagic.downloader.Downloader)
-     * @deprecated
-     */
-    @Deprecated
-    public Spider downloader(Downloader downloader) {
-        return setDownloader(downloader);
     }
 
     /**
@@ -381,13 +343,6 @@ public class Spider implements Runnable, Task {
             close();
         }
         logger.info("Spider {} closed! {} pages downloaded.", getUUID(), pageCount.get());
-    }
-
-    /**
-     * @deprecated Use {@link #onError(Request, Exception)} instead.
-     */
-    @Deprecated
-    protected void onError(Request request) {
     }
 
     protected void onError(Request request, Exception e) {

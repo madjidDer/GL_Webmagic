@@ -53,6 +53,9 @@ public class Page {
 
     private String charset;
 
+    /**
+     * This constructor is empty because it's the default constructor and it doesn't need to initialize any fields.
+     */
     public Page() {
     }
 
