@@ -274,15 +274,20 @@ public class Spider implements Runnable, Task {
         this.downloader = downloader;
         return this;
     }
-
-    protected void initComponent() {
+    
+    protected void initDownloader() {
         if (downloader == null) {
-            this.downloader = new HttpClientDownloader();
+            downloader = new HttpClientDownloader();
         }
+    }
+    
+    protected void initPipelines() {
         if (pipelines.isEmpty()) {
             pipelines.add(new ConsolePipeline());
         }
-        downloader.setThread(threadNum);
+    }
+    
+    protected void initThreadPool() {
         if (threadPool == null || threadPool.isShutdown()) {
             if (executorService != null && !executorService.isShutdown()) {
                 threadPool = new CountableThreadPool(threadNum, executorService);
@@ -290,6 +295,13 @@ public class Spider implements Runnable, Task {
                 threadPool = new CountableThreadPool(threadNum);
             }
         }
+    }
+
+    protected void initComponent() {
+    	initDownloader();
+    	initPipelines();
+        downloader.setThread(threadNum);
+        initThreadPool();
         if (startRequests != null) {
             for (Request request : startRequests) {
                 addRequest(request);
