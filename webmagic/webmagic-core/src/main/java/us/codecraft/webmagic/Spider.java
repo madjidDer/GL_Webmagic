@@ -316,56 +316,67 @@ public class Spider implements Runnable, Task {
         checkRunningStat();
         initComponent();
         logger.info("Spider {} started!", getUUID());
-        // interrupt won't be necessarily detected
-        while (!Thread.currentThread().isInterrupted() && stat.get() == STAT_RUNNING) {
-            Request poll = scheduler.poll(this);
-            if (poll == null) {
-                if (threadPool.getThreadAlive() == 0) {
-                    //no alive thread anymore , try again
-                    poll = scheduler.poll(this);
-                    if (poll == null) {
-                        if (exitWhenComplete) {
-                            break;
-                        } else {
-                            // wait
-                            try {
-                                Thread.sleep(emptySleepTime);
-                                continue;
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
-                                break;
-                            }
-                        }
-                    }
-                } else {
-                    // wait until new url added，
-                    if (scheduler.waitNewUrl(threadPool, emptySleepTime)) {
-                        // if interrupted
-                        break;
-                    }
-                    continue;
-                }
+        mainLoop();
+        finalizeSpider();
+    }
+
+    private void mainLoop() {
+        while (shouldContinue()) {
+            Request request = fetchNextRequest();
+            if (request != null) {
+                processRequestAsync(request);
             }
-            final Request request = poll;
-            //this may swallow the interruption
-            threadPool.execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        processRequest(request);
-                        onSuccess(request);
-                    } catch (Exception e) {
-                        onError(request, e);
-                        logger.error("process request " + request + " error", e);
-                    } finally {
-                        pageCount.incrementAndGet();
-                        scheduler.signalNewUrl();
-                    }
-                }
-            });
         }
+    }
+
+    private boolean shouldContinue() {
+        // Refactor the conditions into a clear method
+        return !Thread.currentThread().isInterrupted() && stat.get() == STAT_RUNNING;
+    }
+
+    private Request fetchNextRequest() {
+        // Simplifies the request fetching logic
+        Request poll = scheduler.poll(this);
+        if (poll == null && threadPool.getThreadAlive() == 0) {
+            waitForNewUrlOrExit();
+        }
+        return poll;
+    }
+
+    private void waitForNewUrlOrExit() {
+        // Handles waiting for new URL or decides to exit
+        try {
+            boolean isNewUrlAdded = scheduler.waitNewUrl(threadPool, emptySleepTime);
+            if (!isNewUrlAdded && exitWhenComplete) {
+                Thread.currentThread().interrupt();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private void processRequestAsync(final Request request) {
+        threadPool.execute(() -> {
+            try {
+                processRequest(request);
+                onSuccess(request);
+            } catch (Exception e) {
+                handleError(request, e);
+            } finally {
+                pageCount.incrementAndGet();
+                scheduler.signalNewUrl();
+            }
+        });
+    }
+
+    private void handleError(Request request, Exception e) {
+        // Centralizes error handling
+        onError(request, e);
+        logger.error("process request " + request + " error", e);
+    }
+
+    private void finalizeSpider() {
         stat.set(STAT_STOPPED);
-        // release some resources
         if (destroyWhenExit) {
             close();
         }
