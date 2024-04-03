@@ -5,7 +5,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import us.codecraft.webmagic.scheduler.Scheduler;
-import us.codecraft.webmagic.thread.CountableThreadPool;
+import us.codecraft.webmagic.CountableThreadPool;
 
 public class SpiderScheduler {
     private Scheduler scheduler;

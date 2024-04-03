@@ -24,7 +24,7 @@ import us.codecraft.webmagic.pipeline.ResultItemsCollectorPipeline;
 import us.codecraft.webmagic.processor.PageProcessor;
 import us.codecraft.webmagic.scheduler.QueueScheduler;
 import us.codecraft.webmagic.scheduler.Scheduler;
-import us.codecraft.webmagic.thread.CountableThreadPool;
+import us.codecraft.webmagic.CountableThreadPool;
 import us.codecraft.webmagic.utils.UrlUtils;
 import us.codecraft.webmagic.utils.WMCollections;
 
@@ -306,15 +306,10 @@ public class Spider implements Runnable, Task {
     }
 
     private void waitForNewUrlOrExit() {
-        // Handles waiting for new URL or decides to exit
-        try {
-            boolean isNewUrlAdded = scheduler.waitNewUrl(threadPool, emptySleepTime);
-            if (!isNewUrlAdded && exitWhenComplete) {
-                Thread.currentThread().interrupt();
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        boolean isNewUrlAdded = scheduler.waitNewUrl(threadPool, emptySleepTime);
+		if (!isNewUrlAdded && exitWhenComplete) {
+		    Thread.currentThread().interrupt();
+		}
     }
 
     private void processRequestAsync(final Request request) {
@@ -346,7 +341,7 @@ public class Spider implements Runnable, Task {
     }
 
     protected void onError(Request request, Exception e) {
-        this.onError(request);
+        this.onError(request, e);
 
         if (CollectionUtils.isNotEmpty(spiderListeners)) {
             for (SpiderListener spiderListener : spiderListeners) {
