@@ -24,7 +24,6 @@ import us.codecraft.webmagic.pipeline.ResultItemsCollectorPipeline;
 import us.codecraft.webmagic.processor.PageProcessor;
 import us.codecraft.webmagic.scheduler.QueueScheduler;
 import us.codecraft.webmagic.scheduler.Scheduler;
-import us.codecraft.webmagic.CountableThreadPool;
 import us.codecraft.webmagic.utils.UrlUtils;
 import us.codecraft.webmagic.utils.WMCollections;
 
@@ -97,7 +96,7 @@ public class Spider implements Runnable, Task {
 
     protected boolean destroyWhenExit = true;
 
-    private List<SpiderListener> spiderListeners;
+    private List<SpiderListener> spiderListeners = new ArrayList<>();
 
     private final AtomicLong pageCount = new AtomicLong(0);
 
@@ -223,6 +222,27 @@ public class Spider implements Runnable, Task {
         pipelines = new ArrayList<>();
         return this;
     }
+    
+    public Spider addSpiderListener(SpiderListener spiderListener) {
+        this.spiderListeners.add(spiderListener);
+        return this;
+    }
+    
+    public List<SpiderListener> getSpiderListeners() {
+        return spiderListeners;
+    }
+    
+    protected void notifySuccess(Request request) {
+        for (SpiderListener listener : spiderListeners) {
+            listener.onSuccess(request);
+        }
+    }
+
+    protected void notifyError(Request request, Exception e) {
+        for (SpiderListener listener : spiderListeners) {
+            listener.onError(request, e);
+        }
+    }
 
     /**
      * set the downloader of spider
@@ -342,20 +362,11 @@ public class Spider implements Runnable, Task {
 
     protected void onError(Request request, Exception e) {
         this.onError(request, e);
-
-        if (CollectionUtils.isNotEmpty(spiderListeners)) {
-            for (SpiderListener spiderListener : spiderListeners) {
-                spiderListener.onError(request, e);
-            }
-        }
+        notifyError(request, e);
     }
 
     protected void onSuccess(Request request) {
-        if (CollectionUtils.isNotEmpty(spiderListeners)) {
-            for (SpiderListener spiderListener : spiderListeners) {
-                spiderListener.onSuccess(request);
-            }
-        }
+    	notifySuccess(request);
     }
 
     private void checkRunningStat() {
@@ -385,7 +396,7 @@ public class Spider implements Runnable, Task {
             try {
                 ((Closeable) object).close();
             } catch (IOException e) {
-            	LOGGER.log("context", e);
+            	e.printStackTrace();
             }
         }
     }
@@ -718,15 +729,6 @@ public class Spider implements Runnable, Task {
     @Override
     public Site getSite() {
         return site;
-    }
-
-    public List<SpiderListener> getSpiderListeners() {
-        return spiderListeners;
-    }
-
-    public Spider setSpiderListeners(List<SpiderListener> spiderListeners) {
-        this.spiderListeners = spiderListeners;
-        return this;
     }
 
     public Date getStartTime() {
